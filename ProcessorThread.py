@@ -35,8 +35,8 @@ class ProcessorThread(threading.Thread):
             html = item[2]
             self.logger.debug("processing: " + identifier)
 
-            name = self.extract_name(html)
-            developer = self.extract_developer(html)
+            name = self.extract_name(html).replace("\\", "\\\\")
+            developer = self.extract_developer(html).replace("\\", "\\\\")
             rating = self.extract_rating(html)
             rating_count = self.extract_rating_count(html)
             update_date = self.extract_update_date(html)
@@ -158,13 +158,6 @@ class ProcessorThread(threading.Thread):
             return ('None',)
 
 
-#    def process_permissions(self, permissions):
-#       result = []
-#       dict = {"view Wi-Fi state": "ACCESS_WIFI_STATE",
-#"read phone state and identity": "READ_PHONE_STATE"}
-#       for permission in permissions:
-#           result.append(dict[permission])
-
     def update_database(self, identifier, name, developer, rating, rating_count, update_date, version, category, downloads, size, price, content_rating, permissions):
 
         perms = ""
@@ -173,20 +166,37 @@ class ProcessorThread(threading.Thread):
         perms = perms.rstrip(' ,')
   
         # try update app
-        self.db_cursor.execute('UPDATE "public"."applications" SET last_time_processed = now(), name = '+name+', developer = '+developer+', rating = '+rating+', rating_count = '+rating_count+', update_date = '+update_date+', version = '+version+', category = '+category+', downloads = '+downloads+', size = '+size+', price = '+price+', content_rating = '+content_rating+', permissions = \''+perms+'\' WHERE identifier = \''+identifier+'\';')
-        self.logger.debug('UPDATE "public"."applications" SET last_time_processed = now(), name = '+name+', developer = '+developer+', rating = '+rating+', rating_count = '+rating_count+', update_date = '+update_date+', version = '+version+', category = '+category+', downloads = '+downloads+', size = '+size+', price = '+price+', content_rating = '+content_rating+', permissions = \''+perms+'\' WHERE identifier = \''+identifier+'\';')
+        self.db_cursor.execute('UPDATE "public"."applications" SET last_time_processed = now(), name = '+name+', developer = '+developer+', rating = '+rating+', rating_count = '+rating_count+', update_date = '+update_date+', version = '+version+', category = (SELECT id FROM categories WHERE name = '+category+'), downloads = '+downloads+', size = '+size+', price = '+price+', content_rating = '+content_rating+', permissions = \''+perms+'\' WHERE identifier = \''+identifier+'\';')
+        self.logger.debug('UPDATE "public"."applications" SET last_time_processed = now(), name = '+name+', developer = '+developer+', rating = '+rating+', rating_count = '+rating_count+', update_date = '+update_date+', version = '+version+', category = (SELECT id FROM categories WHERE name = '+category+'), downloads = '+downloads+', size = '+size+', price = '+price+', content_rating = '+content_rating+', permissions = \''+perms+'\' WHERE identifier = \''+identifier+'\';')
         
         # try insert app
-        self.db_cursor.execute('INSERT INTO "public"."applications" (identifier, last_time_processed, name, developer, rating, rating_count, update_date, version, category, downloads, size, price, content_rating, permissions) SELECT \''+identifier+'\', now(), '+name+', '+developer+', '+rating+', '+rating_count+', '+update_date+', '+version+', '+category+', '+downloads+', '+size+', '+price+', '+content_rating+', \''+perms+'\' WHERE NOT EXISTS (SELECT 1 FROM "public"."applications" WHERE identifier = \''+identifier+'\');')
-        self.logger.debug('INSERT INTO "public"."applications" (identifier, last_time_processed, name, developer, rating, rating_count, update_date, version, category, downloads, size, price, content_rating, permissions) SELECT \''+identifier+'\', now(), '+name+', '+developer+', '+rating+', '+rating_count+', '+update_date+', '+version+', '+category+', '+downloads+', '+size+', '+price+', '+content_rating+', \''+perms+'\' WHERE NOT EXISTS (SELECT 1 FROM "public"."applications" WHERE identifier = \''+identifier+'\');')
-        
-        # + permissions
-        self.db_cursor.execute('DELETE FROM "public"."applications_permissions" WHERE identifier = '+identifier+';')
-        for perm in permissions:
-            self.db_cursor.execute('INSERT INTO "public"."applications_permissions" (identifier, name) SELECT '+identifier+', name FROM "public"."permissions" WHERE regex = '+perm+';')
+        self.db_cursor.execute('INSERT INTO "public"."applications" (identifier, last_time_processed, name, developer, rating, rating_count, update_date, version, category, downloads, size, price, content_rating, permissions) SELECT \''+identifier+'\', now(), '+name+', '+developer+', '+rating+', '+rating_count+', '+update_date+', '+version+', (SELECT id FROM categories WHERE name = '+category+'), '+downloads+', '+size+', '+price+', '+content_rating+', \''+perms+'\' WHERE NOT EXISTS (SELECT 1 FROM "public"."applications" WHERE identifier = \''+identifier+'\');')
+        self.logger.debug('INSERT INTO "public"."applications" (identifier, last_time_processed, name, developer, rating, rating_count, update_date, version, category, downloads, size, price, content_rating, permissions) SELECT \''+identifier+'\', now(), '+name+', '+developer+', '+rating+', '+rating_count+', '+update_date+', '+version+', (SELECT id FROM categories WHERE name = '+category+'), '+downloads+', '+size+', '+price+', '+content_rating+', \''+perms+'\' WHERE NOT EXISTS (SELECT 1 FROM "public"."applications" WHERE identifier = \''+identifier+'\');')
 
-        # commit
-        self.db_conn.commit()
+        self.db_conn.commit()        
+
+        # + permissions
+        self.db_cursor.execute('DELETE FROM "public"."applications_permissions" WHERE application_id IN (SELECT id FROM "public"."applications" WHERE identifier = \''+identifier+'\');')
+        for perm in permissions:
+            try:
+                self.db_cursor.execute('SELECT id FROM "public"."permissions" WHERE regex = \''+perm+'\'')
+                id = self.db_cursor.fetchone()
+                if (id != None):
+                    id = int(id[0])
+                    self.db_cursor.execute('INSERT INTO "public"."applications_permissions" (application_id, permission_id) VALUES ( (SELECT id FROM "public"."applications" WHERE identifier = \''+identifier+'\'), '+str(id)+' );')
+                else:
+                    self.logger.error("not found in Database: " + perm)
+                    ###
+                    self.db_cursor.execute('INSERT INTO "public"."permissions" (name, description, regex) VALUES ( \'unknown\', Null, \''+perm+'\' )');
+                    self.db_cursor.execute('SELECT id FROM "public"."permissions" WHERE regex = \''+perm+'\'')
+                    id = self.db_cursor.fetchone()[0]
+                    self.db_cursor.execute('INSERT INTO "public"."applications_permissions" (application_id, permission_id) VALUES ( (SELECT id FROM "public"."applications" WHERE identifier = \''+identifier+'\'), '+str(id)+' );')
+                    continue
+                # commit
+                self.db_conn.commit()
+            except Exception, err:
+                self.logger.error("Exception - " + str(err))
+                
 
 
 
