@@ -161,7 +161,10 @@ class ProcessorThread(threading.Thread):
     def update_database(self, identifier, name, developer, rating, rating_count, update_date, version, category, downloads, size, price, content_rating, permissions):
 
         perms = ""
+        perm_dict = dict()
         for perm in permissions:
+            perm_dict[perm] = ''
+        for perm in perm_dict:
             perms = perms + perm + ', '
         perms = perms.rstrip(' ,')
   
@@ -177,7 +180,7 @@ class ProcessorThread(threading.Thread):
 
         # + permissions
         self.db_cursor.execute('DELETE FROM "public"."applications_permissions" WHERE application_id IN (SELECT id FROM "public"."applications" WHERE identifier = \''+identifier+'\');')
-        for perm in permissions:
+        for perm in perm_dict:
             try:
                 self.db_cursor.execute('SELECT id FROM "public"."permissions" WHERE regex = \''+perm+'\'')
                 id = self.db_cursor.fetchone()
