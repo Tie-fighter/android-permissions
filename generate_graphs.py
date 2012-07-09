@@ -127,6 +127,7 @@ def main():
                         ,p.regex \
                         ,pc / cc::float AS commercial \
                         ,pf / cf::float AS free \
+                        ,pf / cf::float - pc / cc::float AS difference \
                         ,CASE WHEN pc = 0 THEN 0 \
                          ELSE ((pf / cf::float) - (pc / cc::float)) / (pc / cc::float) \
                          END as rel_difference \
@@ -143,6 +144,7 @@ def main():
     permissions_commcount = []
     permissions_freecount = []
     permissions_difference = []
+    permissions_reldifference = []
   
     for permission in permissions_data:
         permissions_ids.insert(0, int(permission[0]))
@@ -150,33 +152,43 @@ def main():
         permissions_commcount.insert(0, float(permission[2]))
         permissions_freecount.insert(0, float(permission[3]))
         permissions_difference.insert(0, float(permission[4]))
+        permissions_reldifference.insert(0, float(permission[5]))
 
-    print permissions_difference
-
-    fig = pyplot.figure(figsize=(12, 12))
+    fig = pyplot.figure(figsize=(12, 10))
+    fig.subplots_adjust(top = 0.95, bottom = -0.2)
     sb411 = fig.add_subplot(411)
     sb412 = fig.add_subplot(412, sharex=sb411)
+    sb413 = fig.add_subplot(413, sharex=sb411)
+    sb411.minorticks_on()
 
     sb411.plot(permissions_ids, permissions_commcount, 'r.', label="commercial")
     sb411.plot(permissions_ids, permissions_freecount, 'b.', label="free")
     sb411.fill_between(permissions_ids, permissions_commcount, permissions_freecount, facecolor='green')
     sb411.set_title('Characteristic line')
 #    sb411.set_yscale('log')
+
     sb411.set_ylabel('percentage of applications')
     sb411.legend()
     sb411.grid(True)
 
-
     sb412.plot(permissions_ids, permissions_difference, 'g.', label="difference")
-    sb412.fill_between(permissions_ids, permissions_difference, 0)
-#    sb412.set_yscale('log')
+    sb412.fill_between(permissions_ids, permissions_difference, 0, facecolor='orange')
+#    sb412.set_yscale('symlog')
 #    sb412.set_xlim(35, 50)
     sb412.set_xlim(0, max(permissions_ids))
-    sb412.set_ylim(-1, 4)
-    sb412.set_xlabel('permission id')
-    sb412.set_ylabel('relative difference')
+#    sb412.set_ylim(-0.2, 0.2)
+    sb412.set_ylabel('absolute difference')
     sb412.grid(True)
 
+    sb413.plot(permissions_ids, permissions_reldifference, 'g.', label="relative difference")
+    sb413.fill_between(permissions_ids, permissions_reldifference, 0, facecolor='red')
+#    sb413.set_yscale('log')
+#    sb413.set_xlim(35, 50)
+    sb413.set_xlim(0, max(permissions_ids))
+    sb413.set_ylim(-1, 4)
+    sb413.set_xlabel('permission id')
+    sb413.set_ylabel('relative difference (comm to free)')
+    sb413.grid(True)
 
     pyplot.savefig( path + 'characteristic.svg')
 
