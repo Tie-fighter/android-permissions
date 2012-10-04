@@ -51,14 +51,13 @@ ALTER TABLE public.ratings ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.rating_counts ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.prices ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.pointsintime ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE public.pointintime_permissions ALTER COLUMN permission_id DROP DEFAULT;
 ALTER TABLE public.icons ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.downloads ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.developers ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.content_ratings ALTER COLUMN id DROP DEFAULT;
 DROP SEQUENCE public.versions_id_seq;
 DROP TABLE public.versions;
-DROP SEQUENCE public.updates_id_seq;
+DROP SEQUENCE public.update_dates_id_seq;
 DROP TABLE public.update_dates;
 DROP SEQUENCE public.sizes_id_seq;
 DROP TABLE public.sizes;
@@ -69,9 +68,8 @@ DROP SEQUENCE public.rating_counts_id_seq;
 DROP TABLE public.rating_counts;
 DROP SEQUENCE public.prices_id_seq;
 DROP TABLE public.prices;
-DROP SEQUENCE public.pointsintim_id_seq;
+DROP SEQUENCE public.pointsintime_id_seq;
 DROP TABLE public.pointsintime;
-DROP SEQUENCE public.pit_permissions_permission_id_seq;
 DROP TABLE public.pointintime_permissions;
 DROP TABLE public.permissions;
 DROP SEQUENCE public.permissions_id_seq;
@@ -337,27 +335,6 @@ CREATE TABLE pointintime_permissions (
 ALTER TABLE public.pointintime_permissions OWNER TO "android-permissions";
 
 --
--- Name: pit_permissions_permission_id_seq; Type: SEQUENCE; Schema: public; Owner: android-permissions
---
-
-CREATE SEQUENCE pit_permissions_permission_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.pit_permissions_permission_id_seq OWNER TO "android-permissions";
-
---
--- Name: pit_permissions_permission_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: android-permissions
---
-
-ALTER SEQUENCE pit_permissions_permission_id_seq OWNED BY pointintime_permissions.permission_id;
-
-
---
 -- Name: pointsintime; Type: TABLE; Schema: public; Owner: android-permissions; Tablespace: 
 --
 
@@ -381,10 +358,10 @@ CREATE TABLE pointsintime (
 ALTER TABLE public.pointsintime OWNER TO "android-permissions";
 
 --
--- Name: pointsintim_id_seq; Type: SEQUENCE; Schema: public; Owner: android-permissions
+-- Name: pointsintime_id_seq; Type: SEQUENCE; Schema: public; Owner: android-permissions
 --
 
-CREATE SEQUENCE pointsintim_id_seq
+CREATE SEQUENCE pointsintime_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MAXVALUE
@@ -392,13 +369,13 @@ CREATE SEQUENCE pointsintim_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.pointsintim_id_seq OWNER TO "android-permissions";
+ALTER TABLE public.pointsintime_id_seq OWNER TO "android-permissions";
 
 --
--- Name: pointsintim_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: android-permissions
+-- Name: pointsintime_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: android-permissions
 --
 
-ALTER SEQUENCE pointsintim_id_seq OWNED BY pointsintime.id;
+ALTER SEQUENCE pointsintime_id_seq OWNED BY pointsintime.id;
 
 
 --
@@ -567,10 +544,10 @@ CREATE TABLE update_dates (
 ALTER TABLE public.update_dates OWNER TO "android-permissions";
 
 --
--- Name: updates_id_seq; Type: SEQUENCE; Schema: public; Owner: android-permissions
+-- Name: update_dates_id_seq; Type: SEQUENCE; Schema: public; Owner: android-permissions
 --
 
-CREATE SEQUENCE updates_id_seq
+CREATE SEQUENCE update_dates_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MAXVALUE
@@ -578,13 +555,13 @@ CREATE SEQUENCE updates_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.updates_id_seq OWNER TO "android-permissions";
+ALTER TABLE public.update_dates_id_seq OWNER TO "android-permissions";
 
 --
--- Name: updates_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: android-permissions
+-- Name: update_dates_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: android-permissions
 --
 
-ALTER SEQUENCE updates_id_seq OWNED BY update_dates.id;
+ALTER SEQUENCE update_dates_id_seq OWNED BY update_dates.id;
 
 
 --
@@ -649,17 +626,10 @@ ALTER TABLE ONLY icons ALTER COLUMN id SET DEFAULT nextval('icons_id_seq'::regcl
 
 
 --
--- Name: permission_id; Type: DEFAULT; Schema: public; Owner: android-permissions
---
-
-ALTER TABLE ONLY pointintime_permissions ALTER COLUMN permission_id SET DEFAULT nextval('pit_permissions_permission_id_seq'::regclass);
-
-
---
 -- Name: id; Type: DEFAULT; Schema: public; Owner: android-permissions
 --
 
-ALTER TABLE ONLY pointsintime ALTER COLUMN id SET DEFAULT nextval('pointsintim_id_seq'::regclass);
+ALTER TABLE ONLY pointsintime ALTER COLUMN id SET DEFAULT nextval('pointsintime_id_seq'::regclass);
 
 
 --
@@ -693,3 +663,299 @@ ALTER TABLE ONLY ratings ALTER COLUMN value SET DEFAULT nextval('ratings_value_s
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: android-permissions
 --
+
+ALTER TABLE ONLY sizes ALTER COLUMN id SET DEFAULT nextval('sizes_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY update_dates ALTER COLUMN id SET DEFAULT nextval('update_dates_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY versions ALTER COLUMN id SET DEFAULT nextval('versions_id_seq'::regclass);
+
+
+--
+-- Name: applications_identifier_key; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY applications
+    ADD CONSTRAINT applications_identifier_key UNIQUE (identifier);
+
+
+--
+-- Name: applications_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY applications
+    ADD CONSTRAINT applications_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: categories_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY categories
+    ADD CONSTRAINT categories_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: content_ratings_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY content_ratings
+    ADD CONSTRAINT content_ratings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: developers_id_key; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY developers
+    ADD CONSTRAINT developers_id_key UNIQUE (id);
+
+
+--
+-- Name: developers_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY developers
+    ADD CONSTRAINT developers_pkey PRIMARY KEY (id, value);
+
+
+--
+-- Name: downloads_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY downloads
+    ADD CONSTRAINT downloads_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: icons_id_key; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY icons
+    ADD CONSTRAINT icons_id_key UNIQUE (id);
+
+
+--
+-- Name: icons_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY icons
+    ADD CONSTRAINT icons_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: icons_sha1_key; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY icons
+    ADD CONSTRAINT icons_sha1_key UNIQUE (sha1);
+
+
+--
+-- Name: permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY permissions
+    ADD CONSTRAINT permissions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pointsintim_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY pointsintime
+    ADD CONSTRAINT pointsintim_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: prices_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY prices
+    ADD CONSTRAINT prices_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: rating_counts_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY rating_counts
+    ADD CONSTRAINT rating_counts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ratings_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY ratings
+    ADD CONSTRAINT ratings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sizes_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY sizes
+    ADD CONSTRAINT sizes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: updates_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY update_dates
+    ADD CONSTRAINT updates_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: versions_pkey; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY versions
+    ADD CONSTRAINT versions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: versions_value_key; Type: CONSTRAINT; Schema: public; Owner: android-permissions; Tablespace: 
+--
+
+ALTER TABLE ONLY versions
+    ADD CONSTRAINT versions_value_key UNIQUE (value);
+
+
+--
+-- Name: pointintime_permissions_permission_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY pointintime_permissions
+    ADD CONSTRAINT pointintime_permissions_permission_id_fkey FOREIGN KEY (permission_id) REFERENCES permissions(id);
+
+
+--
+-- Name: pointintime_permissions_pointintime_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY pointintime_permissions
+    ADD CONSTRAINT pointintime_permissions_pointintime_id_fkey FOREIGN KEY (pointintime_id) REFERENCES pointsintime(id);
+
+
+--
+-- Name: pointsintime_application_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY pointsintime
+    ADD CONSTRAINT pointsintime_application_id_fkey FOREIGN KEY (application_id) REFERENCES applications(id);
+
+
+--
+-- Name: pointsintime_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY pointsintime
+    ADD CONSTRAINT pointsintime_category_id_fkey FOREIGN KEY (category_id) REFERENCES categories(id);
+
+
+--
+-- Name: pointsintime_developer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY pointsintime
+    ADD CONSTRAINT pointsintime_developer_id_fkey FOREIGN KEY (developer_id) REFERENCES developers(id);
+
+
+--
+-- Name: pointsintime_download_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY pointsintime
+    ADD CONSTRAINT pointsintime_download_id_fkey FOREIGN KEY (download_id) REFERENCES downloads(id);
+
+
+--
+-- Name: pointsintime_icon_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY pointsintime
+    ADD CONSTRAINT pointsintime_icon_id_fkey FOREIGN KEY (icon_id) REFERENCES icons(id);
+
+
+--
+-- Name: pointsintime_price_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY pointsintime
+    ADD CONSTRAINT pointsintime_price_id_fkey FOREIGN KEY (price_id) REFERENCES prices(id);
+
+
+--
+-- Name: pointsintime_rating_count_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY pointsintime
+    ADD CONSTRAINT pointsintime_rating_count_id_fkey FOREIGN KEY (rating_count_id) REFERENCES rating_counts(id);
+
+
+--
+-- Name: pointsintime_rating_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY pointsintime
+    ADD CONSTRAINT pointsintime_rating_id_fkey FOREIGN KEY (rating_id) REFERENCES ratings(id);
+
+
+--
+-- Name: pointsintime_size_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY pointsintime
+    ADD CONSTRAINT pointsintime_size_id_fkey FOREIGN KEY (size_id) REFERENCES sizes(id);
+
+
+--
+-- Name: pointsintime_update_date_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY pointsintime
+    ADD CONSTRAINT pointsintime_update_date_id_fkey FOREIGN KEY (update_date_id) REFERENCES update_dates(id);
+
+
+--
+-- Name: pointsintime_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: android-permissions
+--
+
+ALTER TABLE ONLY pointsintime
+    ADD CONSTRAINT pointsintime_version_id_fkey FOREIGN KEY (version_id) REFERENCES versions(id);
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- Name: applications; Type: ACL; Schema: public; Owner: android-permissions
+--
+
+REVOKE ALL ON TABLE applications FROM PUBLIC;
+REVOKE ALL ON TABLE applications FROM "android-permissions";
+GRANT ALL ON TABLE applications TO "android-permissions";
+
+--
+-- PostgreSQL database dump complete
+--
+
