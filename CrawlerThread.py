@@ -9,6 +9,11 @@ import psycopg2
 
 from config import *
 
+class HttpError(BaseException):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 class CrawlerThread(threading.Thread):
     def __init__(self, logger, crawling_queue, crawled_dict, discovered_dict, processing_queue, processed_dict):
@@ -36,8 +41,16 @@ class CrawlerThread(threading.Thread):
         while True:
             url = self.crawling_queue.get()
             self.logger.debug("crawling " + url)
-            html = self.fetch_page(url)
-
+            try:
+                html = self.fetch_page(url)
+            except HttpError as e:
+                self.logger.info("HttpError: Code " + e.value + " at " + url)
+                if (re.match('https:\/\/play.google.com\/store\/apps\/details\?id=[^&"?#<>()]*', url) != None):
+                    identifier = re.findall('\/store\/apps\/details\?id=([^&"?#<>()]*)', url)[0]
+#                    print('INSERT INTO "public"."pointsintime" (timestamp, application_id) VALUES ( now(), (SELECT id FROM "public"."applications" WHERE identifier = \''+identifier+'\' ))')
+#                    self.db_cursor.execute('INSERT INTO "public"."pointsintime" (timestamp, application_id) VALUES ( now(), (SELECT id FROM "public"."applications" WHERE identifier = \''+identifier+'\' ))')
+#                    self.db_conn.commit()
+                continue
 
             # add found apps to queue
             identifiers = self.find_identifiers(html)
@@ -68,7 +81,13 @@ class CrawlerThread(threading.Thread):
 
     def fetch_page(self, url):
         f = urllib.urlopen(url)
-        return ''.join(f.readlines())
+
+        code = str(f.getcode())
+
+        if (re.findall('(2\\d\\d|3\\d\\d)', code)):
+            return ''.join(f.readlines())
+        else:
+            raise HttpError(str(f.getcode()))
 
     def find_identifiers(self, html):
         identifiers = re.findall('\/store\/apps\/details\?id=([^&"?#<>()]*)', html)
