@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# This file is part of android-permissions and licensed under GNU LGPL.
+# This file is part of android-permissions and licensed under The MIT License (MIT).
 
 import ConfigParser		# read_config
 
